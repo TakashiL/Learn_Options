@@ -1,2 +1,5 @@
 # .idea dir created by PyCharm
 .idea
+
+# PyCodeObject file
+.pyc
