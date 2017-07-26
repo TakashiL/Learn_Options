@@ -4,65 +4,90 @@ import doupo_trade
 
 
 class Account:
-    def __init__(self, asset=0):
-        self.availableAsset = asset
-        self.margins = defaultdict(int)
-        self.positions = defaultdict(int)
+    def __init__(self, available=0, units=10):
+        # assume no margin and service fee
+        self.available = available
+        self.units = units
+        self.futures = defaultdict(list)  # {due-price : [settlement price, amount]}
+        self.options = defaultdict(list)  # {option_name : [settlement price, amount]}
 
-    def addavailableasset(self, money):
-        self.availableAsset += money
+    def addavailable(self, money):
+        self.available += money
 
-    def addmargins(self, name, money):
-        self.availableAsset -= money
-        self.margins[name] += money
+    def setunits(self, newunits):
+        self.units = newunits
 
-    def releasemargins(self, name):
-        self.availableAsset += self.margins[name]
-        self.margins.pop(name)
+    def takenewfuture(self, due, price, amount):
+        futurename = str(due) + '-' + str(price)
+        if futurename not in self.futures:
+            self.futures[futurename] = [price, amount]  # + means buy(long), - means sell(short)
+        else:
+            self.futures[futurename][1] += amount
 
-    def changepositions(self, name, amount, price, margin=0):
-        # + means buy, - means sell
-        self.positions[name] += amount
+    def hedgefuture(self, oldfuture, newprice):
+        if oldfuture not in self.futures:
+            raise Exception("oldfuture " + oldfuture + " not exist")
 
-        self.availableAsset -= price * amount
+        # assume close this future at all
+        [oldprice, oldamount] = self.futures[oldfuture]
 
-        if margin != 0:
-            self.addmargins(name, margin)
+        profit = (newprice - oldprice) * oldamount * self.units
+        self.available += profit
 
-        # if position == 0, delete this item, release margin
-        if self.positions[name] == 0:
-            self.positions.pop(name)
-            if name in self.margins:
-                self.releasemargins(name)
+        self.futures.pop(oldfuture)
+
+    def takenewoption(self, optionname, price, amount):
+        settlementprice = int(optionname.split('-')[2])
+        if optionname not in self.options:
+            self.options[optionname] = [settlementprice, amount]  # + means buy(long), - means sell(short)
+        else:
+            self.options[optionname][1] += amount
+
+        premium = price * amount * self.units  # + means pay, - means get
+        self.available -= premium
+
+    def hedgeoption(self, optionname, newprice):
+        if optionname not in self.options:
+            raise Exception("optionname " + optionname + " not exist")
+
+        # assume close this option at all
+        oldamount = self.options[optionname][1]
+
+        premium = newprice * oldamount * self.units
+        self.available += premium
+
+        self.options.pop(optionname)
 
     def printaccount(self):
         print("the available asset is: ", end='')
-        print(self.availableAsset)
-        print("the margin asset is: ", end='')
-        print(self.margins)
-        print("the positions are: ", end='')
-        print(self.positions)
+        print(self.available)
+        print("the futures are: ", end='')
+        print(self.futures)
+        print("the options are: ", end='')
+        print(self.options)
 
-    def gettotalmargin(self):
-        totalmargin = 0
-        for key in self.margins:
-            totalmargin += self.margins[key]
-        return totalmargin
+    def gettotalfutureasset(self, date):
+        totalfutureasset = 0
+        for futurename in self.futures:
+            [due, oldprice] = futurename.split('-')
+            amount = self.futures[futurename][1]
+            newprice = doupo_trade.get_closing_price(date, due, 1)
+            value = (newprice - int(oldprice)) * amount * self.units
+            totalfutureasset += value
+        return totalfutureasset
 
-    def gettotalpositionasset(self, date):
-        totalpositionasset = 0
-        for key in self.positions:
-            if 'm' in key:
-                isfuture = 0
-            else:
-                isfuture = 1
-            price = doupo_trade.get_closing_price(date, key, isfuture)
-            totalpositionasset += price * self.positions[key] * 10
-        return totalpositionasset
+    def gettotaloptionasset(self, date):
+        totaloptionasset = 0
+        for optionname in self.options:
+            amount = self.options[optionname][1]
+            newprice = doupo_trade.get_closing_price(date, optionname, 0)
+            value = newprice * amount * self.units
+            totaloptionasset += value
+        return totaloptionasset
 
     def gettotalasset(self, date):
-        totalmargin = self.gettotalmargin()
-        totalpositionasset = self.gettotalpositionasset(date)
+        totalfutureasset = self.gettotalfutureasset(date)
+        totaloptionasset = self.gettotaloptionasset(date)
 
-        total = self.availableAsset + totalmargin + totalpositionasset
+        total = self.available + totalfutureasset + totaloptionasset
         return total

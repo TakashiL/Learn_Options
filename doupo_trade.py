@@ -122,33 +122,46 @@ def get_closing_price(date, name, isfuture):
     return price.iloc[0]
 
 
-def trade_option(account, date, name, amount, margin=0):
+def take_option(account, date, name, amount):
     price = get_closing_price(date, name, 0)
-    account.changepositions(name, amount, price * 10, margin)  # there is 10 tons per board lot
-    print 'Trade record: Option:' + name + ' date:' + date + ' amount:' + str(amount) + ' price:' + str(price) + ' margin:' + str(margin)
+    account.takenewoption(name, price, amount)
+    print 'Trade record: Option:' + name + ' date:' + date + ' amount:' + str(amount) + ' price:' + str(price)
 
 
 def buy_option(account, date, name, amount):
-    trade_option(account, date, name, amount)
+    take_option(account, date, name, amount)
 
 
-def sell_option(account, date, name, amount, margin=0):
+def sell_option(account, date, name, amount):
     # calculate margin if has any
-    trade_option(account, date, name, -amount, margin)
+    take_option(account, date, name, -amount)
 
 
-def trade_future(account, date, name, amount, margin=0):
+def hedge_option(account, date, name):
+    # assume close this option at all
+    price = get_closing_price(date, name, 0)
+    account.hedgeoption(name, price)
+
+
+def take_future(account, date, name, amount):
     price = get_closing_price(date, name, 1)
-    account.changepositions(name, amount, price * 10, margin)  # there is 10 tons per board lot
-    print 'Trade record: Future:' + name + ' date:' + date + ' amount:' + str(amount) + ' price:' + str(price) + ' margin:' + str(margin)
+    account.takenewfuture(name, price, amount)
+    print 'Trade record: Future:' + name + ' date:' + date + ' amount:' + str(amount) + ' price:' + str(price)
 
 
-def buy_future(account, date, name, amount, margin=0):
+def buy_future(account, date, name, amount):
     # calculate margin if has any
-    trade_future(account, date, name, amount, margin)
+    take_future(account, date, name, amount)
 
 
-def sell_future(account, date, name, amount, margin=0):
+def sell_future(account, date, name, amount):
     # calculate margin if has any
-    trade_future(account, date, name, -amount, margin)
+    take_future(account, date, name, -amount)
+
+
+def hedge_future(account, date, futurename):
+    due = futurename.split('-')[0]
+    # assume close this future at all
+    price = get_closing_price(date, due, 1)
+    account.hedgefuture(futurename, price)
 
