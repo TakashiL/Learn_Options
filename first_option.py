@@ -1,30 +1,128 @@
+from math import exp
+import os
+import matplotlib.pyplot as plt
 from option_trade_framework import Account
 import doupo_trade
 
-account = Account(100000, 10)
-doupo_trade.buy_future(account, '0609', '1709', 1)
-doupo_trade.buy_option(account, '0609', 'm1709-P-2650', 1)
-doupo_trade.sell_option(account, '0609', 'm1709-C-2650', 1)
 
-account.printaccount()
-print '----------------------------'
-print account.gettotalfutureasset('0609')
-print account.gettotaloptionasset('0609')
-print account.gettotalasset('0609')
-print '----------------------------'
-print account.gettotalfutureasset('0612')
-print account.gettotaloptionasset('0612')
-print account.gettotalasset('0612')
-print '----------------------------'
+class Combo:
+    def __init__(self, futuredue, futureprice, settleprice, putoptionprice, calloptionprice, amount):
+        self.futuredue = futuredue
+        self.futureprice = futureprice
+        self.settleprice = settleprice
+        self.putoption = 'm' + futuredue + '-P-' + str(settleprice)
+        self.putoptionprice = putoptionprice
+        self.calloption = 'm' + futuredue + '-C-' + str(settleprice)
+        self.calloptionname = calloptionprice
+        self.amount = amount
 
-doupo_trade.hedge_future(account, '0612', '1709-2686')
-doupo_trade.hedge_option(account, '0612', 'm1709-P-2650')
-doupo_trade.hedge_option(account, '0612', 'm1709-C-2650')
 
-account.printaccount()
-print '----------------------------'
-print account.available
-print account.gettotalfutureasset('0612')
-print account.gettotaloptionasset('0612')
-print account.gettotalasset('0612')
+def doupo_takeposition(account, date, combo):
+    doupo_trade.buy_future(account, date, combo.futuredue, combo.amount)
+    doupo_trade.buy_option(account, date, combo.putoption, combo.amount)
+    doupo_trade.sell_option(account, date, combo.calloption, combo.amount)
 
+
+def doupo_hedgeposition(account, date, combo):
+    futurename = combo.futuredue + '-' + str(combo.futureprice)
+    doupo_trade.hedge_future(account, date, futurename)
+    doupo_trade.hedge_option(account, date, combo.putoption)
+    doupo_trade.hedge_option(account, date, combo.calloption)
+
+myaccount = Account(100000, 10)
+combos = []  # [Combo1, Combo2]
+asset = []
+days = []
+daycount = 0
+maxmargin = 0
+
+# parameter
+dominant = '1709'
+optiontradingday = 145
+futuretradingday = 173
+# datefiles = ['0609.txt', '0612.txt', '0613.txt']
+datefiles = os.listdir("doupo_option_data")
+tradingday = doupo_trade.gettradingdaydict()
+r = 0.02
+
+'''
+first sign
+if (C - P) > F*exp(-r*Tf) - K*exp(-r*To):
+    buy a combo
+    
+second sign
+if (C - P) < F*exp(-r*Tf) - K:
+    sell a combo
+'''
+# strategy starts
+for f in datefiles:
+    date = f.split('.')[0]
+    futureprice = doupo_trade.get_closing_price(date, dominant, 1)
+    futuretime = 1.0 * (futuretradingday - tradingday[date]) / 252
+    optiontime = 1.0 * (optiontradingday - tradingday[date]) / 252
+    myaccount.printaccount(date)
+
+    totalasset = myaccount.gettotalasset(date)
+    asset.append(totalasset - 100000)
+    days.append(daycount)
+    daycount += 1
+
+    if len(combos) == 0:  # no position, try to buy a combo
+        maxdiff = 0
+        maxK = 0
+        maxput = 0
+        maxcall = 0
+
+        calloptions = doupo_trade.dominant_calloptions(date, dominant)
+        for calloption in calloptions:
+            K = int(calloption.split('-')[2])
+            putoption = calloption.replace('C', 'P')
+            calloptionprice = doupo_trade.get_closing_price(date, calloption, 0)
+            putoptionprice = doupo_trade.get_closing_price(date, putoption, 0)
+
+            middle = calloptionprice - putoptionprice
+            upper = futureprice * exp(-r*futuretime) - K * exp(-r*optiontime)
+            diff = middle - upper
+
+            if diff > maxdiff:
+                maxdiff = diff
+                maxK = K
+                maxput = putoptionprice
+                maxcall = calloptionprice
+
+        if maxdiff > 10:
+            tmpcombo = Combo(dominant, futureprice, maxK, maxput, maxcall, 1)
+            doupo_takeposition(myaccount, date, tmpcombo)
+            combos.append(tmpcombo)
+            calloptionmargin1 = maxcall * 10 + futureprice - 0.5 * max(0, maxK-futureprice) * 10
+            calloptionmargin2 = maxcall * 10 + 0.5 * futureprice
+            calloptionmargin = max(calloptionmargin1, calloptionmargin2)
+            margin = futureprice + calloptionmargin
+            if margin > maxmargin:
+                maxmargin = margin
+
+    else:  # own position, try to hedge position
+        mycombo = combos[0]
+        todaycallprice = doupo_trade.get_closing_price(date, mycombo.calloption, 0)
+        todayputprice = doupo_trade.get_closing_price(date, mycombo.putoption, 0)
+        todayK = mycombo.settleprice
+
+        middle = todaycallprice - todayputprice
+        upper = futureprice * exp(-r*futuretime) - todayK * exp(-r*optiontime)
+        if middle - upper < 7:
+            doupo_hedgeposition(myaccount, date, mycombo)
+            combos.pop(0)
+
+print "---------------------------------"
+print "max margin: " + str(maxmargin)
+print "final profit: " + str(myaccount.gettotalasset('0726')-100000)
+
+for i in range(len(asset)):
+    asset[i] += maxmargin
+
+# plot
+plt.figure(figsize=(8,8))
+plt.plot(days, asset, color='red', linewidth=2, marker='o')
+plt.xlabel("days(d)")
+plt.ylabel("asset")
+plt.show()

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import defaultdict
 import doupo_trade
 
@@ -58,13 +57,14 @@ class Account:
 
         self.options.pop(optionname)
 
-    def printaccount(self):
-        print("the available asset is: ", end='')
-        print(self.available)
-        print("the futures are: ", end='')
-        print(self.futures)
-        print("the options are: ", end='')
-        print(self.options)
+    def printaccount(self, date):
+        print "------------------------"
+        print "date: " + date
+        print "avaliable asset: " + str(self.available)
+        print "total asset: " + str(self.gettotalasset(date))
+        print "futures: " + str(self.futures)
+        print "options: " + str(self.options)
+        print "------------------------"
 
     def gettotalfutureasset(self, date):
         totalfutureasset = 0

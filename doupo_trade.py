@@ -4,6 +4,16 @@ import os
 from collections import defaultdict
 
 
+def gettradingdaydict():
+    tradingday = defaultdict(int)
+    count = 59
+    for f in os.listdir("doupo_option_data"):
+        date = f.split('.')[0]
+        tradingday[date] = count
+        count += 1
+    return tradingday
+
+
 # retrun type: dataframe
 # description: option data of a specific day
 def option_onedaydata(filename):
@@ -31,6 +41,17 @@ def option_onedaydata(filename):
         df.iloc[:, i] = pd.to_numeric(df.iloc[:, i])
 
     return df
+
+
+def dominant_calloptions(date, dominant):
+    options = []
+    df = option_onedaydata(date + '.txt')
+    for option in df['hymc']:
+        month = option.split('-')[0]
+        type = option.split('-')[1]
+        if dominant in month and type == 'C':
+            options.append(option)
+    return options
 
 
 # retrun type: defaultdict
@@ -140,7 +161,9 @@ def sell_option(account, date, name, amount):
 def hedge_option(account, date, name):
     # assume close this option at all
     price = get_closing_price(date, name, 0)
+    amount = account.options[name][1]
     account.hedgeoption(name, price)
+    print 'Hedge record: Option:' + name + ' date:' + date + ' amount:' + str(amount) + ' new price:' + str(price)
 
 
 def take_future(account, date, name, amount):
@@ -163,5 +186,7 @@ def hedge_future(account, date, futurename):
     due = futurename.split('-')[0]
     # assume close this future at all
     price = get_closing_price(date, due, 1)
+    amount = account.futures[futurename][1]
     account.hedgefuture(futurename, price)
+    print 'Hedge record: Future:' + futurename + ' date:' + date + ' amount:' + str(amount) + ' new price:' + str(price)
 
