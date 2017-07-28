@@ -29,14 +29,20 @@ def doupo_hedgeposition(account, date, combo):
     doupo_trade.hedge_option(account, date, combo.putoption)
     doupo_trade.hedge_option(account, date, combo.calloption)
 
-myaccount = Account(100000, 10)
+myaccount = Account(0, 10)
 combos = []  # [Combo1, Combo2]
 asset = []
 days = []
 daycount = 0
 maxmargin = 0
+tradecount = 0
+tempasset = 0
+
+# file
+trade_record = open('trade_record.txt', 'w')
 
 # parameter
+
 dominant = '1709'
 optiontradingday = 145
 futuretradingday = 173
@@ -63,7 +69,7 @@ for f in datefiles:
     myaccount.printaccount(date)
 
     totalasset = myaccount.gettotalasset(date)
-    asset.append(totalasset - 100000)
+    asset.append(totalasset)
     days.append(daycount)
     daycount += 1
 
@@ -92,14 +98,17 @@ for f in datefiles:
 
         if maxdiff > 10:
             tmpcombo = Combo(dominant, futureprice, maxK, maxput, maxcall, 1)
+            tempasset = myaccount.gettotalasset(date)
             doupo_takeposition(myaccount, date, tmpcombo)
             combos.append(tmpcombo)
+            
             calloptionmargin1 = maxcall * 10 + futureprice - 0.5 * max(0, maxK-futureprice) * 10
             calloptionmargin2 = maxcall * 10 + 0.5 * futureprice
             calloptionmargin = max(calloptionmargin1, calloptionmargin2)
             margin = futureprice + calloptionmargin
             if margin > maxmargin:
                 maxmargin = margin
+            trade_record.write(date + ' buy a combo, margin: ' + str(maxmargin) + ', current asset: ' + str(tempasset) + '\n')
 
     else:  # own position, try to hedge position
         mycombo = combos[0]
@@ -112,10 +121,17 @@ for f in datefiles:
         if middle - upper < 7:
             doupo_hedgeposition(myaccount, date, mycombo)
             combos.pop(0)
+            profit_onetime = myaccount.gettotalasset(date) - tempasset
+
+            tradecount += 1
+            trade_record.write(date + ' hedge a combo, tradecount: ' + str(tradecount) + ', profit: ' + str(profit_onetime) + '\n')
 
 print "---------------------------------"
 print "max margin: " + str(maxmargin)
-print "final profit: " + str(myaccount.gettotalasset('0726')-100000)
+print "final profit: " + str(myaccount.gettotalasset('0726'))
+print "total trade times: " + str(tradecount)
+
+trade_record.close()
 
 for i in range(len(asset)):
     asset[i] += maxmargin

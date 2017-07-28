@@ -3,6 +3,12 @@ import pandas as pd
 import os
 from collections import defaultdict
 
+# parameter
+futureslip = 1
+optionslip = 0.5
+futureservicefee = 1.8
+optionservicefee = 1
+
 
 def gettradingdaydict():
     tradingday = defaultdict(int)
@@ -145,6 +151,7 @@ def get_closing_price(date, name, isfuture):
 
 def take_option(account, date, name, amount):
     price = get_closing_price(date, name, 0)
+    account.available -= optionservicefee
     account.takenewoption(name, price, amount)
     print 'Trade record: Option:' + name + ' date:' + date + ' amount:' + str(amount) + ' price:' + str(price)
 
@@ -162,12 +169,15 @@ def hedge_option(account, date, name):
     # assume close this option at all
     price = get_closing_price(date, name, 0)
     amount = account.options[name][1]
+    account.available -= optionservicefee
+    account.available -= optionslip * account.units
     account.hedgeoption(name, price)
     print 'Hedge record: Option:' + name + ' date:' + date + ' amount:' + str(amount) + ' new price:' + str(price)
 
 
 def take_future(account, date, name, amount):
     price = get_closing_price(date, name, 1)
+    account.available -= futureservicefee
     account.takenewfuture(name, price, amount)
     print 'Trade record: Future:' + name + ' date:' + date + ' amount:' + str(amount) + ' price:' + str(price)
 
@@ -187,6 +197,8 @@ def hedge_future(account, date, futurename):
     # assume close this future at all
     price = get_closing_price(date, due, 1)
     amount = account.futures[futurename][1]
+    account.available -= futureservicefee
+    account.available -= futureslip * account.units
     account.hedgefuture(futurename, price)
     print 'Hedge record: Future:' + futurename + ' date:' + date + ' amount:' + str(amount) + ' new price:' + str(price)
 
