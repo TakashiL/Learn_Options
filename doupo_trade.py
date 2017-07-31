@@ -4,9 +4,9 @@ import os
 from collections import defaultdict
 
 # parameter
-futureslip = 1
-optionslip = 0.5
-futureservicefee = 1.8
+futureslip = 2
+optionslip = 1
+futureservicefee = 3
 optionservicefee = 1
 
 

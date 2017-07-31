@@ -1,0 +1,49 @@
+0331 buy a combo, margin: 8540.0, current asset: 0
+0406 hedge a combo, tradecount: 1, profit: 30.0
+0407 buy a combo, margin: 8540.0, current asset: 30.0
+0410 hedge a combo, tradecount: 2, profit: 140.0
+0411 buy a combo, margin: 8540.0, current asset: 170.0
+0413 hedge a combo, tradecount: 3, profit: 60.0
+0414 buy a combo, margin: 9173.0, current asset: 230.0
+0417 hedge a combo, tradecount: 4, profit: 130.0
+0418 buy a combo, margin: 9173.0, current asset: 360.0
+0419 hedge a combo, tradecount: 5, profit: 85.0
+0421 buy a combo, margin: 9173.0, current asset: 445.0
+0425 hedge a combo, tradecount: 6, profit: 45.0
+0426 buy a combo, margin: 9173.0, current asset: 490.0
+0428 hedge a combo, tradecount: 7, profit: 75.0
+0503 buy a combo, margin: 9173.0, current asset: 565.0
+0504 hedge a combo, tradecount: 8, profit: 75.0
+0505 buy a combo, margin: 9173.0, current asset: 640.0
+0510 hedge a combo, tradecount: 9, profit: 180.0
+0512 buy a combo, margin: 9173.0, current asset: 820.0
+0516 hedge a combo, tradecount: 10, profit: 25.0
+0519 buy a combo, margin: 9173.0, current asset: 845.0
+0525 hedge a combo, tradecount: 11, profit: 85.0
+0526 buy a combo, margin: 9173.0, current asset: 930.0
+0531 hedge a combo, tradecount: 12, profit: 95.0
+0601 buy a combo, margin: 9173.0, current asset: 1025.0
+0602 hedge a combo, tradecount: 13, profit: 45.0
+0605 buy a combo, margin: 9173.0, current asset: 1070.0
+0606 hedge a combo, tradecount: 14, profit: 110.0
+0607 buy a combo, margin: 9173.0, current asset: 1180.0
+0608 hedge a combo, tradecount: 15, profit: 25.0
+0609 buy a combo, margin: 9173.0, current asset: 1205.0
+0614 hedge a combo, tradecount: 16, profit: 65.0
+0616 buy a combo, margin: 9173.0, current asset: 1270.0
+0619 hedge a combo, tradecount: 17, profit: 95.0
+0622 buy a combo, margin: 9173.0, current asset: 1365.0
+0623 hedge a combo, tradecount: 18, profit: 135.0
+0628 buy a combo, margin: 9173.0, current asset: 1500.0
+0629 hedge a combo, tradecount: 19, profit: 55.0
+0706 buy a combo, margin: 9791.0, current asset: 1555.0
+0707 hedge a combo, tradecount: 20, profit: 0.0
+0710 buy a combo, margin: 11244.0, current asset: 1555.0
+0711 hedge a combo, tradecount: 21, profit: 170.0
+0712 buy a combo, margin: 11244.0, current asset: 1725.0
+0714 hedge a combo, tradecount: 22, profit: 195.0
+0719 buy a combo, margin: 11244.0, current asset: 1920.0
+0720 hedge a combo, tradecount: 23, profit: 180.0
+0724 buy a combo, margin: 11244.0, current asset: 2100.0
+0725 hedge a combo, tradecount: 24, profit: 25.0
+0726 buy a combo, margin: 11244.0, current asset: 2125.0

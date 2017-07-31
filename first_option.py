@@ -38,18 +38,17 @@ maxmargin = 0
 tradecount = 0
 tempasset = 0
 
-# file
-trade_record = open('trade_record.txt', 'w')
-
 # parameter
 
-dominant = '1709'
-optiontradingday = 145
-futuretradingday = 173
-# datefiles = ['0609.txt', '0612.txt', '0613.txt']
-datefiles = os.listdir("doupo_option_data")
+# dominant = '1801'; optiontradingday = 228; futuretradingday = 254  # 1801
+dominant = '1709'; optiontradingday = 145; futuretradingday = 173  # 1709
+# datefiles = os.listdir("doupo_option_data")
+datefiles = ['0728.txt']
 tradingday = doupo_trade.gettradingdaydict()
 r = 0.02
+
+# file
+trade_record = open('trade_record__' + dominant + '.txt', 'w')
 
 '''
 first sign
@@ -101,7 +100,7 @@ for f in datefiles:
             tempasset = myaccount.gettotalasset(date)
             doupo_takeposition(myaccount, date, tmpcombo)
             combos.append(tmpcombo)
-            
+
             calloptionmargin1 = maxcall * 10 + futureprice - 0.5 * max(0, maxK-futureprice) * 10
             calloptionmargin2 = maxcall * 10 + 0.5 * futureprice
             calloptionmargin = max(calloptionmargin1, calloptionmargin2)
@@ -128,7 +127,7 @@ for f in datefiles:
 
 print "---------------------------------"
 print "max margin: " + str(maxmargin)
-print "final profit: " + str(myaccount.gettotalasset('0726'))
+print "final profit: " + str(myaccount.gettotalasset('0728'))
 print "total trade times: " + str(tradecount)
 
 trade_record.close()
@@ -137,7 +136,7 @@ for i in range(len(asset)):
     asset[i] += maxmargin
 
 # plot
-plt.figure(figsize=(8,8))
+plt.figure(figsize=(8, 8))
 plt.plot(days, asset, color='red', linewidth=2, marker='o')
 plt.xlabel("days(d)")
 plt.ylabel("asset")
